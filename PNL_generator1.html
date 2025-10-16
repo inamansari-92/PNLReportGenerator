@@ -1,0 +1,417 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>A.T Commodities — Monthly P&L Generator</title>
+  <style>
+    :root{--accent:#1f6feb;--card-bg:#ffffff;--muted:#666}
+    *{box-sizing:border-box;font-family:Inter,ui-sans-serif,system-ui,Segoe UI,Roboto,"Helvetica Neue",Arial}
+    body{margin:0;background:#f4f6fb;color:#111}
+    header{background:linear-gradient(90deg,#08306b11,#1f6feb11);padding:14px 18px;border-bottom:1px solid #e6eefc}
+    .container{max-width:1100px;margin:18px auto;padding:12px}
+    h1{font-size:20px;margin:0;color:var(--accent)}
+    .grid{display:grid;grid-template-columns:1fr;gap:12px}
+    @media(min-width:900px){.grid{grid-template-columns:360px 1fr}}
+    .card{background:var(--card-bg);padding:12px;border-radius:10px;box-shadow:0 6px 18px rgba(18,38,63,0.06)}
+    label{display:block;font-size:13px;margin-bottom:6px;color:var(--muted)}
+    input,select,textarea{width:100%;padding:8px;border:1px solid #e6eefc;border-radius:6px}
+    .row{display:flex;gap:8px}
+    .row > *{flex:1}
+    button{background:var(--accent);color:#fff;padding:8px 12px;border:none;border-radius:6px;cursor:pointer}
+    button.ghost{background:#fff;color:var(--accent);border:1px solid #d9e8ff}
+    table{width:100%;border-collapse:collapse;font-size:13px}
+    th,td{padding:8px;text-align:left;border-bottom:1px solid #f0f3f8}
+    th{background:#fbfdff}
+    .small{font-size:12px;color:var(--muted)}
+    .flex{display:flex;gap:8px;align-items:center}
+    .summary{display:flex;gap:8px;flex-wrap:wrap}
+    .summary .stat{flex:1;min-width:160px;padding:12px;border-radius:8px;background:linear-gradient(180deg,#fff,#fbfdff);box-shadow:0 6px 18px rgba(18,38,63,0.04)}
+    .actions{display:flex;gap:8px;flex-wrap:wrap}
+    .table-wrap{max-height:260px;overflow:auto}
+    .muted{color:var(--muted)}
+    .mt{margin-top:12px}
+    .mb{margin-bottom:12px}
+    footer{padding:12px;text-align:center;color:var(--muted);font-size:12px}
+    .print-area{display:none}
+    .danger{background:#ffefef;color:#a00;border:1px solid #f6c2c2}
+  </style>
+</head>
+<body>
+  <header>
+    <div class="container" style="display:flex;justify-content:space-between;align-items:center">
+      <div>
+        <h1>A.T Commodities — Monthly P&L Generator</h1>
+        <div class="small">Coal & Minerals Trading Company</div>
+      </div>
+      <div class="small muted">Local data (browser). Save/Export to continue later.</div>
+    </div>
+  </header>
+
+  <main class="container">
+    <div class="grid">
+
+      <!-- Left column: Input forms -->
+      <div class="card">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
+          <strong>Data Entry</strong>
+          <select id="monthPicker"></select>
+        </div>
+
+        <!-- Purchases -->
+        <details open>
+          <summary><strong>1. Monthly Purchases Tracker</strong></summary>
+          <div class="mt">
+            <div class="row">
+              <input type="date" id="p_date">
+              <input placeholder="Vehicle No" id="p_vehicle">
+            </div>
+            <div class="row mt">
+              <input placeholder="Supplier Name" id="p_supplier">
+              <input type="number" step="0.01" placeholder="Quantity (MT)" id="p_qty">
+            </div>
+            <div class="row mt">
+              <input type="number" step="0.01" placeholder="Price per Ton" id="p_price">
+              <div style="flex:0.6"><button id="addPurchase">Add Purchase</button></div>
+            </div>
+            <div class="table-wrap mt">
+              <table id="p_table"><thead><tr><th>Date</th><th>Vehicle</th><th>Supplier</th><th>Qty (MT)</th><th>Price/T</th><th>Total</th><th></th></tr></thead><tbody></tbody></table>
+            </div>
+          </div>
+        </details>
+
+        <!-- Sales -->
+        <details class="mt" open>
+          <summary><strong>2. Monthly Sales Tracker</strong></summary>
+          <div class="mt">
+            <div class="row">
+              <input type="date" id="s_date">
+              <input placeholder="Vehicle No" id="s_vehicle">
+            </div>
+            <div class="row mt">
+              <input placeholder="Customer Name" id="s_customer">
+              <input type="number" step="0.01" placeholder="Quantity (MT)" id="s_qty">
+            </div>
+            <div class="row mt">
+              <input type="number" step="0.01" placeholder="Price per Ton" id="s_price">
+              <div style="flex:0.6"><button id="addSale">Add Sale</button></div>
+            </div>
+            <div class="table-wrap mt">
+              <table id="s_table"><thead><tr><th>Date</th><th>Vehicle</th><th>Customer</th><th>Qty (MT)</th><th>Price/T</th><th>Total</th><th></th></tr></thead><tbody></tbody></table>
+            </div>
+          </div>
+        </details>
+
+        <!-- Expenses -->
+        <details class="mt" open>
+          <summary><strong>4. Monthly Expenses Manager</strong></summary>
+          <div class="mt">
+            <div class="row">
+              <input placeholder="Voucher No" id="e_voucher">
+              <input type="date" id="e_date">
+            </div>
+            <div class="mt">
+              <input placeholder="Narration" id="e_narration">
+            </div>
+            <div class="row mt">
+              <input type="number" step="0.01" placeholder="Amount" id="e_amount">
+              <div style="flex:0.6"><button id="addExpense">Add Expense</button></div>
+            </div>
+            <div class="table-wrap mt">
+              <table id="e_table"><thead><tr><th>Voucher#</th><th>Date</th><th>Narration</th><th>Amount</th><th></th></tr></thead><tbody></tbody></table>
+            </div>
+          </div>
+        </details>
+
+        <div class="mt actions">
+          <button id="saveLocal">Save (Local)</button>
+          <button id="exportJSON" class="ghost">Export JSON</button>
+          <button id="importJSON" class="ghost">Import JSON</button>
+          <button id="exportCSV" class="ghost">Export CSV</button>
+        </div>
+        <input type="file" id="fileInput" accept="application/json" style="display:none">
+      </div>
+
+      <!-- Right column: Summaries & Report -->
+      <div>
+        <div class="card">
+          <strong>3. Gross Profit Calculator</strong>
+          <div class="summary mt">
+            <div class="stat">
+              <div class="small">Total Purchases Cost</div>
+              <div id="totalPurchases">0</div>
+            </div>
+            <div class="stat">
+              <div class="small">Total Sales Revenue</div>
+              <div id="totalSales">0</div>
+            </div>
+            <div class="stat">
+              <div class="small">Gross Profit</div>
+              <div id="grossProfit">0</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="card mt">
+          <strong>5. Net Profit Summary</strong>
+          <div class="summary mt">
+            <div class="stat">
+              <div class="small">Total Expenses</div>
+              <div id="totalExpenses">0</div>
+            </div>
+            <div class="stat">
+              <div class="small">Net Profit</div>
+              <div id="netProfit">0</div>
+            </div>
+          </div>
+
+          <div class="mt actions">
+            <button id="viewReport">View / Print Report</button>
+            <button id="downloadPDF" class="ghost">Export Printable (Print dialog)</button>
+            <button id="clearAll" class="danger">Clear All Data</button>
+          </div>
+        </div>
+
+        <div class="card mt">
+          <strong>Month Selector & Quick Actions</strong>
+          <div class="mt">
+            <label>Selected Month</label>
+            <div id="selectedMonthText" class="small muted"></div>
+            <div class="mt actions">
+              <button id="prevMonth" class="ghost">◀ Prev</button>
+              <button id="nextMonth" class="ghost">Next ▶</button>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+    <footer class="mt">Built for A.T Commodities — data stored locally unless exported. ©</footer>
+  </main>
+
+  <!-- Print / Report Area -->
+  <div id="reportArea" class="print-area">
+    <style>
+      @media print{body *{visibility:hidden}#reportArea, #reportArea *{visibility:visible}#reportArea{position:fixed;left:0;top:0;width:100%}}
+      .report-card{padding:18px;font-family:Inter,Arial}
+      .report-card h2{margin:0 0 8px 0}
+      .report-grid{display:flex;gap:12px}
+      table{width:100%;border-collapse:collapse}
+      th,td{border:1px solid #ccc;padding:6px}
+    </style>
+    <div class="report-card" id="reportContent"></div>
+  </div>
+
+  <script>
+    // --- Data model ---
+    const STORAGE_KEY = 'atcommodities_data_v1';
+    let state = {
+      purchases: [],
+      sales: [],
+      expenses: []
+    };
+
+    // --- Helpers ---
+    const $ = id => document.getElementById(id);
+    const fmt = n => Number(n || 0).toLocaleString(undefined,{minimumFractionDigits:2,maximumFractionDigits:2});
+    const monthKey = d => {
+      const dt = new Date(d);
+      const mm = dt.getMonth()+1; const yyyy = dt.getFullYear();
+      return `${yyyy}-${String(mm).padStart(2,'0')}`;
+    }
+
+    // Initialize month picker with recent 24 months
+    function initMonthPicker(){
+      const sel = $('monthPicker'); sel.innerHTML='';
+      const now = new Date();
+      for(let i=0;i<24;i++){
+        const dt = new Date(now.getFullYear(), now.getMonth()-i,1);
+        const key = `${dt.getFullYear()}-${String(dt.getMonth()+1).padStart(2,'0')}`;
+        const opt = document.createElement('option'); opt.value = key; opt.textContent = dt.toLocaleString(undefined,{month:'long',year:'numeric'});
+        sel.appendChild(opt);
+      }
+      sel.value = `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}`;
+      updateSelectedMonth();
+    }
+
+    function updateSelectedMonth(){
+      const sel = $('monthPicker'); const text = sel.options[sel.selectedIndex].text;
+      $('selectedMonthText').textContent = text + ' ('+sel.value+')';
+      renderTables(); computeSummary();
+    }
+
+    // --- CRUD operations ---
+    function addPurchase(){
+      const date=$('p_date').value; if(!date) return alert('Add date');
+      const item = {date, vehicle: $('p_vehicle').value||'', supplier: $('p_supplier').value||'', qty: parseFloat($('p_qty').value||0), price: parseFloat($('p_price').value||0)};
+      state.purchases.push(item); saveLocal(); renderTables(); clearPurchaseForm();
+    }
+    function addSale(){
+      const date=$('s_date').value; if(!date) return alert('Add date');
+      const item = {date, vehicle: $('s_vehicle').value||'', customer: $('s_customer').value||'', qty: parseFloat($('s_qty').value||0), price: parseFloat($('s_price').value||0)};
+      state.sales.push(item); saveLocal(); renderTables(); clearSaleForm();
+    }
+    function addExpense(){
+      const voucher=$('e_voucher').value||''; const date=$('e_date').value; if(!date) return alert('Add voucher date');
+      const item = {voucher, date, narration: $('e_narration').value||'', amount: parseFloat($('e_amount').value||0)};
+      state.expenses.push(item); saveLocal(); renderTables(); clearExpenseForm();
+    }
+
+    function clearPurchaseForm(){$('p_date').value='';$('p_vehicle').value='';$('p_supplier').value='';$('p_qty').value='';$('p_price').value='';}
+    function clearSaleForm(){$('s_date').value='';$('s_vehicle').value='';$('s_customer').value='';$('s_qty').value='';$('s_price').value='';}
+    function clearExpenseForm(){$('e_voucher').value='';$('e_date').value='';$('e_narration').value='';$('e_amount').value='';}
+
+    // Delete helpers
+    function delFrom(arr,idx){arr.splice(idx,1); saveLocal(); renderTables();}
+
+    // --- Rendering ---
+    function filterByMonth(arr){
+      const mk = $('monthPicker').value; return arr.filter(x=>monthKey(x.date)===mk);
+    }
+
+    function renderTables(){
+      // purchases
+      const pbody=$('p_table').querySelector('tbody'); pbody.innerHTML='';
+      const purchases = filterByMonth(state.purchases);
+      purchases.forEach((p,i)=>{
+        const tr=document.createElement('tr');
+        tr.innerHTML=`<td>${p.date}</td><td>${p.vehicle}</td><td>${p.supplier}</td><td>${fmt(p.qty)}</td><td>${fmt(p.price)}</td><td>${fmt(p.qty*p.price)}</td><td><button class="ghost" onclick='delPurchase(${i})'>Del</button></td>`;
+        pbody.appendChild(tr);
+      });
+      // sales
+      const sbody=$('s_table').querySelector('tbody'); sbody.innerHTML='';
+      const sales = filterByMonth(state.sales);
+      sales.forEach((s,i)=>{
+        const tr=document.createElement('tr');
+        tr.innerHTML=`<td>${s.date}</td><td>${s.vehicle}</td><td>${s.customer}</td><td>${fmt(s.qty)}</td><td>${fmt(s.price)}</td><td>${fmt(s.qty*s.price)}</td><td><button class="ghost" onclick='delSale(${i})'>Del</button></td>`;
+        sbody.appendChild(tr);
+      });
+      // expenses
+      const ebody=$('e_table').querySelector('tbody'); ebody.innerHTML='';
+      const expenses = filterByMonth(state.expenses);
+      expenses.forEach((e,i)=>{
+        const tr=document.createElement('tr');
+        tr.innerHTML=`<td>${e.voucher}</td><td>${e.date}</td><td>${e.narration}</td><td>${fmt(e.amount)}</td><td><button class="ghost" onclick='delExpense(${i})'>Del</button></td>`;
+        ebody.appendChild(tr);
+      });
+    }
+
+    // wrapper deletion with correct index mapping based on month filter -> find actual index
+    function delPurchase(idxInView){
+      const mk=$('monthPicker').value; const filtered = state.purchases.map((v,i)=>({v,i})).filter(x=>monthKey(x.v.date)===mk);
+      const realIdx = filtered[idxInView].i; if(confirm('Delete purchase?')) delFrom(state.purchases, realIdx);
+    }
+    function delSale(idxInView){
+      const mk=$('monthPicker').value; const filtered = state.sales.map((v,i)=>({v,i})).filter(x=>monthKey(x.v.date)===mk);
+      const realIdx = filtered[idxInView].i; if(confirm('Delete sale?')) delFrom(state.sales, realIdx);
+    }
+    function delExpense(idxInView){
+      const mk=$('monthPicker').value; const filtered = state.expenses.map((v,i)=>({v,i})).filter(x=>monthKey(x.v.date)===mk);
+      const realIdx = filtered[idxInView].i; if(confirm('Delete expense?')) delFrom(state.expenses, realIdx);
+    }
+
+    // --- Calculations ---
+    function computeSummary(){
+      const purchases = filterByMonth(state.purchases);
+      const sales = filterByMonth(state.sales);
+      const expenses = filterByMonth(state.expenses);
+      const totalPurchases = purchases.reduce((s,r)=>s + (Number(r.qty||0)*Number(r.price||0)),0);
+      const totalSales = sales.reduce((s,r)=>s + (Number(r.qty||0)*Number(r.price||0)),0);
+      const totalExpenses = expenses.reduce((s,r)=>s + Number(r.amount||0),0);
+      const gross = totalSales - totalPurchases;
+      const net = gross - totalExpenses;
+      $('totalPurchases').textContent = fmt(totalPurchases);
+      $('totalSales').textContent = fmt(totalSales);
+      $('grossProfit').textContent = fmt(gross);
+      $('totalExpenses').textContent = fmt(totalExpenses);
+      $('netProfit').textContent = fmt(net);
+    }
+
+    // --- Persistence ---
+    function saveLocal(){ localStorage.setItem(STORAGE_KEY, JSON.stringify(state)); }
+    function loadLocal(){ const raw=localStorage.getItem(STORAGE_KEY); if(raw) state=JSON.parse(raw); }
+    function exportJSON(){ const blob = new Blob([JSON.stringify(state,null,2)],{type:'application/json'}); const url=URL.createObjectURL(blob); const a=document.createElement('a'); a.href=url; a.download='atcommodities_data.json'; a.click(); URL.revokeObjectURL(url); }
+    function importJSONFile(file){ const reader=new FileReader(); reader.onload=e=>{ try{ const parsed=JSON.parse(e.target.result); state=parsed; saveLocal(); renderTables(); computeSummary(); alert('Imported successfully'); }catch(err){alert('Invalid JSON') }}; reader.readAsText(file); }
+    function exportCSV(){
+      // Create CSV with three sections
+      const mk = $('monthPicker').value;
+      const purchases = filterByMonth(state.purchases);
+      const sales = filterByMonth(state.sales);
+      const expenses = filterByMonth(state.expenses);
+      let csv = `A.T Commodities - P&L Report for,${mk}\n\n`;
+      csv += 'Purchases\nDate,Vehicle,Supplier,Qty,Price per Ton,Total\n';
+      purchases.forEach(p=>{csv+=`${p.date},"${p.vehicle}","${p.supplier}",${p.qty},${p.price},${p.qty*p.price}\n`});
+      csv += '\nSales\nDate,Vehicle,Customer,Qty,Price per Ton,Total\n';
+      sales.forEach(s=>{csv+=`${s.date},"${s.vehicle}","${s.customer}",${s.qty},${s.price},${s.qty*s.price}\n`});
+      csv += '\nExpenses\nVoucher,Date,Narration,Amount\n';
+      expenses.forEach(e=>{csv+=`${e.voucher},${e.date},"${e.narration}",${e.amount}\n`});
+      // Totals
+      csv += '\nTotals\n';
+      const totalPurchases = purchases.reduce((s,r)=>s + (Number(r.qty||0)*Number(r.price||0)),0);
+      const totalSales = sales.reduce((s,r)=>s + (Number(r.qty||0)*Number(r.price||0)),0);
+      const totalExpenses = expenses.reduce((s,r)=>s + Number(r.amount||0),0);
+      csv += `Total Purchases,${totalPurchases}\nTotal Sales,${totalSales}\nTotal Expenses,${totalExpenses}\nGross Profit,${totalSales-totalPurchases}\nNet Profit,${totalSales-totalPurchases-totalExpenses}\n`;
+      const blob=new Blob([csv],{type:'text/csv'}); const url=URL.createObjectURL(blob); const a=document.createElement('a'); a.href=url; a.download=`atcommodities_pnl_${mk}.csv`; a.click(); URL.revokeObjectURL(url);
+    }
+
+    // --- Report / Print ---
+    function buildReport(){
+      const mk = $('monthPicker').value; const purchases = filterByMonth(state.purchases); const sales = filterByMonth(state.sales); const expenses = filterByMonth(state.expenses);
+      const totalPurchases = purchases.reduce((s,r)=>s + (Number(r.qty||0)*Number(r.price||0)),0);
+      const totalSales = sales.reduce((s,r)=>s + (Number(r.qty||0)*Number(r.price||0)),0);
+      const totalExpenses = expenses.reduce((s,r)=>s + Number(r.amount||0),0);
+      const gross = totalSales - totalPurchases; const net = gross - totalExpenses;
+      let html = `<h2>A.T Commodities — P&L Report</h2><div><strong>Month:</strong> ${$('monthPicker').options[$('monthPicker').selectedIndex].text} (${mk})</div><hr>`;
+      html += `<h3>Summary</h3><table><tr><th>Total Purchases</th><td>${fmt(totalPurchases)}</td></tr><tr><th>Total Sales</th><td>${fmt(totalSales)}</td></tr><tr><th>Gross Profit</th><td>${fmt(gross)}</td></tr><tr><th>Total Expenses</th><td>${fmt(totalExpenses)}</td></tr><tr><th>Net Profit</th><td>${fmt(net)}</td></tr></table>`;
+      // Purchases table
+      html += `<h3>Purchases</h3><table><thead><tr><th>Date</th><th>Vehicle</th><th>Supplier</th><th>Qty</th><th>Price/T</th><th>Total</th></tr></thead><tbody>`;
+      purchases.forEach(p=>{html+=`<tr><td>${p.date}</td><td>${p.vehicle}</td><td>${p.supplier}</td><td>${fmt(p.qty)}</td><td>${fmt(p.price)}</td><td>${fmt(p.qty*p.price)}</td></tr>`});
+      html += `</tbody></table>`;
+      // Sales
+      html += `<h3>Sales</h3><table><thead><tr><th>Date</th><th>Vehicle</th><th>Customer</th><th>Qty</th><th>Price/T</th><th>Total</th></tr></thead><tbody>`;
+      sales.forEach(s=>{html+=`<tr><td>${s.date}</td><td>${s.vehicle}</td><td>${s.customer}</td><td>${fmt(s.qty)}</td><td>${fmt(s.price)}</td><td>${fmt(s.qty*s.price)}</td></tr>`});
+      html += `</tbody></table>`;
+      // Expenses
+      html += `<h3>Expenses</h3><table><thead><tr><th>Voucher</th><th>Date</th><th>Narration</th><th>Amount</th></tr></thead><tbody>`;
+      expenses.forEach(e=>{html+=`<tr><td>${e.voucher}</td><td>${e.date}</td><td>${e.narration}</td><td>${fmt(e.amount)}</td></tr>`});
+      html += `</tbody></table>`;
+      return html;
+    }
+
+    function viewReport(){
+      const content = buildReport(); const rc = $('reportContent'); rc.innerHTML = content; // show area
+      // open print preview in new window
+      const w = window.open('','_blank'); w.document.write('<html><head><title>PNL Report</title><meta name="viewport" content="width=device-width,initial-scale=1"><style>body{font-family:Inter,Arial;padding:18px}table{width:100%;border-collapse:collapse}th,td{border:1px solid #ccc;padding:6px;text-align:left}h2,h3{margin:6px 0}</style></head><body>');
+      w.document.write(content);
+      w.document.write('<div style="margin-top:24px"><button onclick="window.print()">Print</button></div>');
+      w.document.write('</body></html>'); w.document.close();
+    }
+
+    // --- UI wiring ---
+    document.addEventListener('DOMContentLoaded',()=>{
+      initMonthPicker(); loadLocal(); renderTables(); computeSummary();
+      $('monthPicker').addEventListener('change',updateSelectedMonth);
+      $('addPurchase').addEventListener('click',addPurchase);
+      $('addSale').addEventListener('click',addSale);
+      $('addExpense').addEventListener('click',addExpense);
+      $('saveLocal').addEventListener('click',()=>{saveLocal(); alert('Saved locally in browser');});
+      $('exportJSON').addEventListener('click',exportJSON);
+      $('importJSON').addEventListener('click',()=>$('fileInput').click());
+      $('fileInput').addEventListener('change',(e)=>{if(e.target.files.length) importJSONFile(e.target.files[0]);});
+      $('exportCSV').addEventListener('click',exportCSV);
+      $('viewReport').addEventListener('click',viewReport);
+      $('downloadPDF').addEventListener('click',()=>{viewReport();});
+      $('prevMonth').addEventListener('click',()=>{ const sel=$('monthPicker'); sel.selectedIndex = Math.min(sel.options.length-1, sel.selectedIndex+1); updateSelectedMonth();});
+      $('nextMonth').addEventListener('click',()=>{ const sel=$('monthPicker'); sel.selectedIndex = Math.max(0, sel.selectedIndex-1); updateSelectedMonth();});
+      $('clearAll').addEventListener('click',()=>{ if(confirm('Delete all local data?')){ state={purchases:[],sales:[],expenses:[]}; saveLocal(); renderTables(); computeSummary(); } });
+
+      // auto compute on any local change
+      window.addEventListener('storage',()=>{ loadLocal(); renderTables(); computeSummary(); });
+    });
+
+    // Expose delete functions to global scope for inline handlers
+    window.delPurchase = delPurchase; window.delSale = delSale; window.delExpense = delExpense;
+  </script>
+</body>
+</html>
